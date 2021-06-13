@@ -1,40 +1,49 @@
 import random
 import argparse
+import math
+
+# Allocate globals
+password = ""
+character_list = ""
+argument_parser = argparse.ArgumentParser()
+
+# Set Constants
+default_length = 32
+characters_to_use = {
+    "lowercase": "abcdefghijklmnopqrstuvwxyz",
+    "uppercase": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    "digits": "0123456789",
+    "symbols": "!@#$%^&*()-_=+[]{};:,./?"
+}
 
 
-if __name__ == '__main__':
-
-    # Set Constants
-    default_length = 32
-    letters = "abcdefghijklmnopqrstuvwxyz"
-    numbers = "0123456789"
-    symbols = "!@#$%^&*()-_=+[]{};:,./?"
-
-    # Allocate globals
-    password = ""
-    character_list = ""
-
+# Functions
+def process_arguments(the_parser):
     # Assemble the arguments
-    argument_parser = argparse.ArgumentParser()
-
-    argument_parser.add_argument(
+    the_parser.add_argument(
         "-l",
         "--length",
         required=False,
         default=str(default_length),
-        help="Length of password to generate. Default is 32 characters."
+        help="Size of password to generate. Default is 32 characters."
     )
-
-    argument_parser.add_argument(
-        "-a",
-        "--alphabet",
+    the_parser.add_argument(
+        "-lc",
+        "--lowercase",
         required=False,
         default=False,
         action="store_true",
         help="Include the alphabet in the generated password."
     )
-
-    argument_parser.add_argument(
+    the_parser.add_argument(
+        "-uc",
+        "--uppercase",
+        required=False,
+        default=False,
+        action="store_true",
+        help="Include uppercase alphabet in the generated password."
+    )
+    the_parser.add_argument(
         "-d",
         "--digits",
         required=False,
@@ -42,8 +51,7 @@ if __name__ == '__main__':
         action="store_true",
         help="Include digits in the generated password."
     )
-
-    argument_parser.add_argument(
+    the_parser.add_argument(
         "-s",
         "--symbols",
         required=False,
@@ -51,30 +59,46 @@ if __name__ == '__main__':
         action="store_true",
         help="Include symbols in the generated password."
     )
-
-    argument_parser.add_argument(
+    the_parser.add_argument(
         "-q",
         "--quantity",
         required=False,
         default="1",
         help="How many passwords to generate. Default is 1."
     )
+    return the_parser.parse_args()
 
-    # Get user-defined arguments
-    user_arguments = argument_parser.parse_args()
 
-    # Compile character list
-    if not user_arguments.digits and not user_arguments.symbols and not user_arguments.alphabet:
-        # Sanity check
-        print("You must choose at least one kind of character. Use -h to show help.")
-        exit(0)
+def compile_characters(the_args, the_chars):
+    compiled_list = ""
+    # If user did not choose any options for characters to include, include them all.
+    if not user_arguments.digits \
+            and not the_args.symbols \
+            and not the_args.uppercase \
+            and not the_args.lowercase:
+        compiled_list = the_chars["lowercase"] \
+                         + the_chars["uppercase"] \
+                         + the_chars["symbols"] \
+                         + the_chars["digits"]
     else:
-        if user_arguments.alphabet:
-            character_list += letters
-        if user_arguments.symbols:
-            character_list += symbols
-        if user_arguments.digits:
-            character_list += numbers
+        if the_args.lowercase:
+            compiled_list += the_chars["lowercase"]
+        if the_args.uppercase:
+            compiled_list += the_chars["uppercase"]
+        if the_args.symbols:
+            compiled_list += the_chars["symbols"]
+        if the_args.digits:
+            compiled_list += the_chars["digits"]
+
+    return compiled_list
+
+
+if __name__ == '__main__':
+    # Get user-defined arguments
+    user_arguments = process_arguments(argument_parser)
+
+    # Compile the character list
+    character_list = compile_characters(user_arguments, characters_to_use)
 
     # Notify user
     print(f"Generating password(s) with {int(user_arguments.length)} characters.")
@@ -88,3 +112,5 @@ if __name__ == '__main__':
             password += random.choice(character_list)
         # Output password
         print(password)
+        entropy = len(password) * math.log(len(list(character_list)), 2)
+        print(entropy)
